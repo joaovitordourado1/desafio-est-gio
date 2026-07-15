@@ -21,3 +21,9 @@ build/
 .vscode/
 .DS_Store
 *.swp
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+# Prisma Client gerado
+backend/src/generated/prisma/
