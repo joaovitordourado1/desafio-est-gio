@@ -1,6 +1,8 @@
 import type {
   Account,
   CreateAccountInput,
+  TransferInput,
+  TransferResult,
   WithdrawalResult,
 } from '../types/account'
 
@@ -46,5 +48,12 @@ export function withdraw(accountId: string, amount: string): Promise<WithdrawalR
   return request<WithdrawalResult>(`/accounts/${accountId}/withdrawals`, {
     method: 'POST',
     body: JSON.stringify({ amount }),
+  })
+}
+
+export function transfer(input: TransferInput): Promise<TransferResult> {
+  return request<TransferResult>('/transfers', {
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }

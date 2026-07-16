@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { AccountForm } from './components/AccountForm'
 import { AccountList } from './components/AccountList'
+import { TransferForm } from './components/TransferForm'
 import { WithdrawalForm } from './components/WithdrawalForm'
 import { listAccounts } from './services/api'
-import type { Account, WithdrawalResult } from './types/account'
+import type { Account, TransferResult, WithdrawalResult } from './types/account'
 import './App.css'
 
 function App() {
@@ -51,6 +52,20 @@ function App() {
     setError(null)
   }
 
+  function handleTransferred(result: TransferResult) {
+    setAccounts((currentAccounts) =>
+      currentAccounts.map((account) => {
+        if (account.id === result.sourceAccount.id) return result.sourceAccount
+        if (account.id === result.destinationAccount.id) return result.destinationAccount
+        return account
+      }),
+    )
+    setNotice(
+      `Transferência de R$ ${result.amount} realizada. Tarifa: R$ ${result.fee}.`,
+    )
+    setError(null)
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -75,7 +90,7 @@ function App() {
           </p>
 
           <div className="rules-note">
-            <p><strong>Corrente</strong><span>R$ 1 por saque · limite de −R$ 500</span></p>
+            <p><strong>Corrente</strong><span>R$ 1 por operação · limite de −R$ 500</span></p>
             <p><strong>Poupança</strong><span>Sem tarifa · saldo nunca negativo</span></p>
           </div>
         </aside>
@@ -92,6 +107,7 @@ function App() {
           <div className="operations-grid">
             <AccountForm onCreated={handleCreated} />
             <WithdrawalForm accounts={accounts} onWithdrawn={handleWithdrawn} />
+            <TransferForm accounts={accounts} onTransferred={handleTransferred} />
           </div>
         </section>
       </main>

@@ -20,3 +20,16 @@ export interface WithdrawalResult {
   amount: string
   fee: string
 }
+
+export interface TransferInput {
+  sourceAccountId: string
+  destinationAccountId: string
+  amount: string
+}
+
+export interface TransferResult {
+  sourceAccount: Account
+  destinationAccount: Account
+  amount: string
+  fee: string
+}
