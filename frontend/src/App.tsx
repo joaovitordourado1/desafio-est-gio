@@ -1,121 +1,107 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useState } from 'react'
+import { AccountForm } from './components/AccountForm'
+import { AccountList } from './components/AccountList'
+import { WithdrawalForm } from './components/WithdrawalForm'
+import { listAccounts } from './services/api'
+import type { Account, WithdrawalResult } from './types/account'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [accounts, setAccounts] = useState<Account[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isActive = true
+
+    listAccounts()
+      .then((loadedAccounts) => {
+        if (isActive) setAccounts(loadedAccounts)
+      })
+      .catch((caughtError: unknown) => {
+        if (isActive) {
+          setError(
+            caughtError instanceof Error ? caughtError.message : 'Erro ao carregar contas.',
+          )
+        }
+      })
+      .finally(() => {
+        if (isActive) setIsLoading(false)
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [])
+
+  function handleCreated(account: Account) {
+    setAccounts((currentAccounts) => [account, ...currentAccounts])
+    setNotice(`Conta “${account.name}” criada com sucesso.`)
+    setError(null)
+  }
+
+  function handleWithdrawn(result: WithdrawalResult) {
+    setAccounts((currentAccounts) =>
+      currentAccounts.map((account) =>
+        account.id === result.account.id ? result.account : account,
+      ),
+    )
+    setNotice(`Saque de R$ ${result.amount} realizado. Tarifa: R$ ${result.fee}.`)
+    setError(null)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app-shell">
+      <header className="topbar">
+        <a className="wordmark" href="#top" aria-label="Banco Agilize — início">
+          AGILIZE<span>/bank</span>
+        </a>
+        <div className="topbar-meta">
+          <span>Ambiente seguro</span>
+          <span className="status-dot" aria-label="Sistema disponível" />
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+      </header>
+
+      <main className="workspace" id="top">
+        <aside className="intro-column">
+          <p className="edition">Conta digital — edição 2026</p>
+          <h1>
+            Seu dinheiro,
+            <em>sem rodeios.</em>
+          </h1>
+          <p className="intro-text">
+            Uma visão direta das suas contas. Crie, consulte e movimente sem sair da página.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+          <div className="rules-note">
+            <p><strong>Corrente</strong><span>R$ 1 por saque · limite de −R$ 500</span></p>
+            <p><strong>Poupança</strong><span>Sem tarifa · saldo nunca negativo</span></p>
+          </div>
+        </aside>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <section className="dashboard-column">
+          {(notice || error) && (
+            <div className={`global-message ${error ? 'error' : 'success'}`} role="status">
+              {error ?? notice}
+            </div>
+          )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <AccountList accounts={accounts} isLoading={isLoading} />
+
+          <div className="operations-grid">
+            <AccountForm onCreated={handleCreated} />
+            <WithdrawalForm accounts={accounts} onWithdrawn={handleWithdrawn} />
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <span>AGILIZE/BANK</span>
+        <span>API conectada · PostgreSQL</span>
+        <span>Desafio técnico 2026</span>
+      </footer>
+    </div>
   )
 }
 
