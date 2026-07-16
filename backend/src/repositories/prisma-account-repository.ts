@@ -1,4 +1,8 @@
-import type { Account as PrismaAccount } from "../generated/prisma/client.js";
+import type {
+  Account as PrismaAccount,
+  Prisma,
+  PrismaClient,
+} from "../generated/prisma/client.js";
 import type { Account, CreateAccountData } from "../types/account.js";
 import { prisma } from "../database/prisma.js";
 import type { AccountRepository } from "./account-repository.js";
@@ -15,8 +19,12 @@ function toAccount(account: PrismaAccount): Account {
 }
 
 export class PrismaAccountRepository implements AccountRepository {
+  constructor(
+    private readonly client: PrismaClient | Prisma.TransactionClient = prisma,
+  ) {}
+
   async create(data: CreateAccountData): Promise<Account> {
-    const account = await prisma.account.create({
+    const account = await this.client.account.create({
       data: {
         name: data.name,
         type: data.type,
@@ -28,7 +36,7 @@ export class PrismaAccountRepository implements AccountRepository {
   }
 
   async findAll(): Promise<Account[]> {
-    const accounts = await prisma.account.findMany({
+    const accounts = await this.client.account.findMany({
       orderBy: { createdAt: "desc" },
     });
 
@@ -36,12 +44,12 @@ export class PrismaAccountRepository implements AccountRepository {
   }
 
   async findById(id: string): Promise<Account | null> {
-    const account = await prisma.account.findUnique({ where: { id } });
+    const account = await this.client.account.findUnique({ where: { id } });
     return account ? toAccount(account) : null;
   }
 
   async updateBalance(id: string, balanceCents: number): Promise<Account> {
-    const account = await prisma.account.update({
+    const account = await this.client.account.update({
       where: { id },
       data: { balanceCents },
     });

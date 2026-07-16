@@ -22,3 +22,10 @@ export interface WithdrawalResult {
   amountCents: number;
   feeCents: number;
 }
+
+export interface TransferResult {
+  sourceAccount: Account;
+  destinationAccount: Account;
+  amountCents: number;
+  feeCents: number;
+}

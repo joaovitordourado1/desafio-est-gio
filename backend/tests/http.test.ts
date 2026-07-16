@@ -3,6 +3,7 @@ import { beforeEach, describe, it } from "node:test";
 import request from "supertest";
 import { createApp } from "../src/app.js";
 import { InMemoryAccountRepository } from "./in-memory-account-repository.js";
+import { InMemoryTransactionManager } from "./in-memory-transaction-manager.js";
 
 describe("API de contas", () => {
   let repository: InMemoryAccountRepository;
@@ -10,7 +11,10 @@ describe("API de contas", () => {
 
   beforeEach(() => {
     repository = new InMemoryAccountRepository();
-    app = createApp(repository);
+    app = createApp({
+      accountRepository: repository,
+      transactionManager: new InMemoryTransactionManager(repository),
+    });
   });
 
   it("cria e lista uma conta", async () => {
@@ -66,5 +70,47 @@ describe("API de contas", () => {
 
     assert.equal(response.status, 404);
     assert.equal(response.body.error.code, "ACCOUNT_NOT_FOUND");
+  });
+
+  it("transfere entre contas e persiste os dois novos saldos", async () => {
+    const source = await repository.create({
+      name: "Origem",
+      type: "CHECKING",
+      initialBalanceCents: 10_000,
+    });
+    const destination = await repository.create({
+      name: "Destino",
+      type: "SAVINGS",
+      initialBalanceCents: 2_000,
+    });
+
+    const response = await request(app).post("/transfers").send({
+      sourceAccountId: source.id,
+      destinationAccountId: destination.id,
+      amount: "50.00",
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.amount, "50.00");
+    assert.equal(response.body.fee, "1.00");
+    assert.equal(response.body.sourceAccount.balance, "49.00");
+    assert.equal(response.body.destinationAccount.balance, "70.00");
+  });
+
+  it("retorna 400 para uma transferência destinada à mesma conta", async () => {
+    const account = await repository.create({
+      name: "Conta única",
+      type: "SAVINGS",
+      initialBalanceCents: 10_000,
+    });
+
+    const response = await request(app).post("/transfers").send({
+      sourceAccountId: account.id,
+      destinationAccountId: account.id,
+      amount: "10.00",
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.error.code, "SAME_ACCOUNT_TRANSFER");
   });
 });

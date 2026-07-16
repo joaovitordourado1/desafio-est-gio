@@ -25,3 +25,13 @@ export const withdrawalSchema = z.object({
     }),
   }),
 });
+
+export const transferSchema = z.object({
+  body: z.object({
+    sourceAccountId: z.string().uuid(),
+    destinationAccountId: z.string().uuid(),
+    amount: moneySchema.refine((amount) => amount > 0, {
+      message: "O valor da transferência deve ser maior que zero.",
+    }),
+  }),
+});

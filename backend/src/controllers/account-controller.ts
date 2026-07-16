@@ -1,7 +1,11 @@
 import type { Request, Response } from "express";
 import type { AccountService } from "../services/account-service.js";
 import type { OperationService } from "../services/operation-service.js";
-import { presentAccount, presentWithdrawal } from "../presenters/account-presenter.js";
+import {
+  presentAccount,
+  presentTransfer,
+  presentWithdrawal,
+} from "../presenters/account-presenter.js";
 import type { AccountType } from "../types/account.js";
 
 interface CreateAccountBody {
@@ -11,6 +15,12 @@ interface CreateAccountBody {
 }
 
 interface WithdrawalBody {
+  amount: number;
+}
+
+interface TransferBody {
+  sourceAccountId: string;
+  destinationAccountId: string;
   amount: number;
 }
 
@@ -44,5 +54,18 @@ export class AccountController {
   ): Promise<void> => {
     const result = await this.operationService.withdraw(request.params.id, request.body.amount);
     response.json(presentWithdrawal(result));
+  };
+
+  transfer = async (
+    request: Request<Record<string, never>, unknown, TransferBody>,
+    response: Response,
+  ): Promise<void> => {
+    const result = await this.operationService.transfer(
+      request.body.sourceAccountId,
+      request.body.destinationAccountId,
+      request.body.amount,
+    );
+
+    response.json(presentTransfer(result));
   };
 }
