@@ -1,33 +1,22 @@
-# Minha Solução — Banco
-
-> Substitua o conteúdo entre colchetes pelas informações da sua solução.
-> Estas informações (aqui ou no README do seu fork) são **obrigatórias**.
+# Minha Solução — Banco Agilize
 
 ## Stack
-- **Backend:** [linguagem e versão — ex.: Node.js 20 / Python 3.11 / Go 1.22] (deve estar no pool aceito)
-- **Frontend:** [ex.: HTML/CSS/JS puro / React / Vue]
 
-## Pré-requisitos / dependências
-- [o que precisa estar instalado e como instalar — ex.: `npm install`, `pip install -r requirements.txt`]
+- **Backend:** Node.js 24 com TypeScript, Express, Zod, Prisma e PostgreSQL.
+- **Frontend:** React 19 com TypeScript e Vite.
 
-## Como executar
+## Execução
 
-### Backend (API)
+Com Git e Docker instalados:
+
 ```bash
-# [comando(s) para subir o backend]
-# ex.: npm run start  →  API em http://localhost:3000
+git clone https://github.com/joaovitordourado1/desafio-est-gio.git
+cd desafio-est-gio
+docker compose up --build -d
 ```
 
-### Frontend
-```bash
-# [comando(s) para subir o frontend]
-# ex.: abrir index.html  /  npm run dev  →  http://localhost:5173
-```
+- Frontend: http://localhost:5173
+- API: http://localhost:3000
+- Health check: http://localhost:3000/health
 
-## Exemplo de uso
-```
-[descreva um fluxo: ex. fazer um saque na tela e o resultado retornado pela API]
-```
-
-## Observações (opcional)
-- [decisões de modelagem, itens de bônus implementados, limitações conhecidas, etc.]
+O primeiro uso, os comandos para desenvolvimento local, os testes e as decisões de arquitetura estão documentados no [README](./README.md).

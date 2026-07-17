@@ -1,6 +1,7 @@
 import { AppError } from "../errors/app-error.js";
 import type { TransactionManager } from "../transactions/transaction-manager.js";
 import type { Account, TransferResult, WithdrawalResult } from "../types/account.js";
+import { MAX_MONEY_CENTS } from "../utils/money.js";
 
 const CHECKING_FEE_CENTS = 100;
 const CHECKING_MINIMUM_BALANCE_CENTS = -50_000;
@@ -70,7 +71,10 @@ export class OperationService {
       );
       const destinationBalanceCents = destinationAccount.balanceCents + amountCents;
 
-      if (!Number.isSafeInteger(destinationBalanceCents)) {
+      if (
+        !Number.isSafeInteger(destinationBalanceCents) ||
+        destinationBalanceCents > MAX_MONEY_CENTS
+      ) {
         throw new AppError("O saldo resultante é inválido.", 400, "INVALID_BALANCE");
       }
 

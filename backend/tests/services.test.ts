@@ -5,6 +5,7 @@ import { AccountService } from "../src/services/account-service.js";
 import { OperationService } from "../src/services/operation-service.js";
 import { InMemoryAccountRepository } from "./in-memory-account-repository.js";
 import { InMemoryTransactionManager } from "./in-memory-transaction-manager.js";
+import { MAX_MONEY_CENTS } from "../src/utils/money.js";
 
 async function expectAppError(
   operation: () => Promise<unknown>,
@@ -39,6 +40,20 @@ describe("AccountService", () => {
           name: "Conta inválida",
           type: "SAVINGS",
           initialBalanceCents: -1,
+        }),
+      "INVALID_INITIAL_BALANCE",
+    );
+  });
+
+  it("rejeita saldo maior que o suportado pela persistência", async () => {
+    const service = new AccountService(new InMemoryAccountRepository());
+
+    await expectAppError(
+      () =>
+        service.create({
+          name: "Conta inválida",
+          type: "CHECKING",
+          initialBalanceCents: MAX_MONEY_CENTS + 1,
         }),
       "INVALID_INITIAL_BALANCE",
     );
@@ -238,5 +253,34 @@ describe("OperationService.transfer", () => {
 
     assert.equal((await repository.findById(source.id))?.balanceCents, 10_000);
     assert.equal((await repository.findById(destination.id))?.balanceCents, 2_000);
+  });
+
+  it("rejeita saldo de destino maior que o suportado pela persistência", async () => {
+    const repository = new InMemoryAccountRepository();
+    const accountService = new AccountService(repository);
+    const operationService = new OperationService(
+      new InMemoryTransactionManager(repository),
+    );
+    const source = await accountService.create({
+      name: "Origem",
+      type: "SAVINGS",
+      initialBalanceCents: 100,
+    });
+    const destination = await accountService.create({
+      name: "Destino",
+      type: "SAVINGS",
+      initialBalanceCents: MAX_MONEY_CENTS,
+    });
+
+    await expectAppError(
+      () => operationService.transfer(source.id, destination.id, 100),
+      "INVALID_BALANCE",
+    );
+
+    assert.equal((await repository.findById(source.id))?.balanceCents, 100);
+    assert.equal(
+      (await repository.findById(destination.id))?.balanceCents,
+      MAX_MONEY_CENTS,
+    );
   });
 });

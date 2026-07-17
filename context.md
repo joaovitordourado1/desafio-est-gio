@@ -8,7 +8,7 @@ Desenvolver a API (Backend) de um banco simulado, suportando operações de Saqu
 - **Framework Web:** Express
 - **Validação de Dados:** Zod
 - **ORM:** Prisma ORM
-- **Banco de Dados:** SQLite (arquivo local gerado pelo Prisma)
+- **Banco de Dados:** PostgreSQL 18
 - **Infraestrutura:** Docker e Docker Compose (Obrigatório para a execução do projeto)
 
 ## 1. Tipos de Conta e Suas Propriedades

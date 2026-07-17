@@ -63,6 +63,17 @@ describe("API de contas", () => {
     assert.equal(response.body.error.code, "VALIDATION_ERROR");
   });
 
+  it("retorna 400 para valor maior que o suportado pelo banco", async () => {
+    const response = await request(app).post("/accounts").send({
+      name: "Conta",
+      type: "CHECKING",
+      initialBalance: "21474836.48",
+    });
+
+    assert.equal(response.status, 400);
+    assert.equal(response.body.error.code, "INVALID_MONEY");
+  });
+
   it("retorna 404 para conta inexistente", async () => {
     const response = await request(app)
       .post("/accounts/00000000-0000-4000-8000-000000000000/withdrawals")
