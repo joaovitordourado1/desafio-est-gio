@@ -5,9 +5,10 @@ import type { Account, TransferResult } from '../types/account'
 interface TransferFormProps {
   accounts: Account[]
   onTransferred: (result: TransferResult) => void
+  onFailed: (accountIds: string[]) => void
 }
 
-export function TransferForm({ accounts, onTransferred }: TransferFormProps) {
+export function TransferForm({ accounts, onTransferred, onFailed }: TransferFormProps) {
   const [sourceAccountId, setSourceAccountId] = useState('')
   const [destinationAccountId, setDestinationAccountId] = useState('')
   const [amount, setAmount] = useState('')
@@ -39,13 +40,16 @@ export function TransferForm({ accounts, onTransferred }: TransferFormProps) {
       setError(
         caughtError instanceof Error ? caughtError.message : 'Erro ao transferir.',
       )
+      onFailed(
+        [selectedSourceAccountId, selectedDestinationAccountId].filter(Boolean),
+      )
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <section className="panel transfer-panel">
+    <section className={`panel transfer-panel${error ? ' has-error' : ''}`}>
       <div className="panel-heading">
         <span className="step">03</span>
         <div>
@@ -54,13 +58,13 @@ export function TransferForm({ accounts, onTransferred }: TransferFormProps) {
         </div>
       </div>
 
-      <form className="transfer-form" onSubmit={handleSubmit}>
+      <form className="transfer-form" onSubmit={handleSubmit} aria-busy={isSubmitting}>
         <label>
           Conta de origem
           <select
             required
             value={selectedSourceAccountId}
-            disabled={!canTransfer}
+            disabled={!canTransfer || isSubmitting}
             onChange={(event) => setSourceAccountId(event.target.value)}
           >
             {!canTransfer && <option value="">Crie duas contas primeiro</option>}
@@ -77,7 +81,7 @@ export function TransferForm({ accounts, onTransferred }: TransferFormProps) {
           <select
             required
             value={selectedDestinationAccountId}
-            disabled={!canTransfer}
+            disabled={!canTransfer || isSubmitting}
             onChange={(event) => setDestinationAccountId(event.target.value)}
           >
             {!canTransfer && <option value="">Crie duas contas primeiro</option>}
@@ -99,13 +103,17 @@ export function TransferForm({ accounts, onTransferred }: TransferFormProps) {
             min="0.01"
             step="0.01"
             value={amount}
-            disabled={!canTransfer}
+            disabled={!canTransfer || isSubmitting}
             onChange={(event) => setAmount(event.target.value)}
             placeholder="0,00"
           />
         </label>
 
-        {error && <p className="message error transfer-message">{error}</p>}
+        {error && (
+          <p className="message error transfer-message" role="alert">
+            {error}
+          </p>
+        )}
 
         <button type="submit" disabled={isSubmitting || !canTransfer}>
           {isSubmitting ? 'Transferindo...' : 'Confirmar transferência'}
